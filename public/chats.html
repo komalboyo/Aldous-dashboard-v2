@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat History</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            color: #FFFFFF;
+        }
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .chat-session {
+            background-color: #1E1E1E;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #2C2C2C;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .session-header:hover {
+            background-color: #3A3A3A;
+        }
+        .session-header h3 {
+            margin: 0;
+            color: #FFFFFF;
+        }
+        .session-header .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        .session-header.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .qa-pairs {
+            display: none;
+            padding: 15px;
+        }
+        .qa-pair {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #3A3A3A;
+            padding-bottom: 15px;
+        }
+        .qa-pair:last-child {
+            border-bottom: none;
+        }
+        .question {
+            font-weight: bold;
+            color: #00ACC1;
+            margin-bottom: 5px;
+        }
+        .answer {
+            color: #B0BEC5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #757575;
+            margin-top: 5px;
+        }
+        .no-records {
+            text-align: center;
+            color: #B0BEC5;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="images/Aldous Logo.png" alt="Company Logo" class="logo">
+    </div>
+
+    <h1>Chat History</h1>
+    <div id="chatRecords"></div>
+
+    <script src="chats.js"></script>
+</body>
+</html>
