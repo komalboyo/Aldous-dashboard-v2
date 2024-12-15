@@ -1,8 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     fetchChatRecords();
+
+    // Add event listener for filter selection
+    const riskFilter = document.getElementById('riskFilter');
+    riskFilter.addEventListener('change', fetchChatRecords);
+    
+    // Add event listener for user search
+    const userSearchInput = document.getElementById('userSearch');
+    userSearchInput.addEventListener('input', fetchChatRecords);
 });
 
 async function fetchChatRecords() {
+    // Show the spinner while fetching data
+    document.getElementById('spinner').style.display = 'block';
+    const container = document.getElementById('chatRecords');
+    container.innerHTML = ''; // Clear previous records
+
     try {
         const response = await fetch('/api/chat-records');
         
@@ -12,9 +25,26 @@ async function fetchChatRecords() {
         }
         
         const chatRecords = await response.json();
-        displayChatRecords(chatRecords);
+
+        // Get the selected risk from the dropdown filter
+        const selectedRisk = document.getElementById('riskFilter').value;
+
+        // Get the user search term
+        const userSearchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+
+        // Filter chat records based on selected risk score
+        const filteredRecords = chatRecords.filter(record => {
+            const matchesRisk = selectedRisk === 'ALL' || record.aggregate_risk_score === selectedRisk;
+            const matchesUserId = userSearchTerm === '' || String(record.user_id).toLowerCase() === userSearchTerm;
+            return matchesRisk && matchesUserId;
+        });
+
+        displayChatRecords(filteredRecords);
     } catch (error) {
         displayErrorMessage(error.message);
+    } finally {
+        // Hide the spinner once the data has been processed
+        document.getElementById('spinner').style.display = 'none';
     }
 }
 
@@ -44,58 +74,41 @@ function displayChatRecords(chatRecords) {
         // Parse the provided timestamp format
         const createdAt = new Date(record.created_at).toLocaleString();
 
-        // Create session header
+        // Create session header with user_id and risk_score
         const headerDiv = document.createElement('div');
         headerDiv.className = 'session-header';
         headerDiv.innerHTML = `
-            <h3>Chat Session ${index + 1}</h3>
-            <span>${createdAt}</span>
+            <h3>User ${record.user_id}</h3>
+            <div class="risk-score">Risk Score: ${record.aggregate_risk_score}</div>
             <i class="fas fa-chevron-down toggle-icon"></i>
         `;
 
-        // Create QA pairs container
+        // Create the QA pairs container
         const qaPairsDiv = document.createElement('div');
         qaPairsDiv.className = 'qa-pairs';
-
-        if (record.qa_pairs && Array.isArray(record.qa_pairs)) {
-            record.qa_pairs.forEach(qa => {
-                const qaPairDiv = document.createElement('div');
-                qaPairDiv.className = 'qa-pair';
-
-                const questionDiv = document.createElement('div');
-                questionDiv.className = 'question';
-                questionDiv.textContent = `Q: ${qa.question || 'No question found'}`;
-
-                const answerDiv = document.createElement('div');
-                answerDiv.className = 'answer';
-                answerDiv.textContent = `A: ${qa.answer || 'No answer found'}`;
-
-                // Parse the provided timestamp format for each QA pair
-                const qaTimestamp = new Date(qa.timestamp).toLocaleString();
-
-                const timestampDiv = document.createElement('div');
-                timestampDiv.className = 'timestamp';
-                timestampDiv.textContent = qaTimestamp;
-
-                qaPairDiv.appendChild(questionDiv);
-                qaPairDiv.appendChild(answerDiv);
-                qaPairDiv.appendChild(timestampDiv);
-
-                qaPairsDiv.appendChild(qaPairDiv);
-            });
-        } else {
-            qaPairsDiv.innerHTML = '<div class="no-records">No Q&A pairs found for this session.</div>';
-        }
-
-        // Add event listener to toggle QA pairs
-        headerDiv.addEventListener('click', () => {
-            headerDiv.classList.toggle('active');
-            qaPairsDiv.style.display = 
-                qaPairsDiv.style.display === 'block' ? 'none' : 'block';
+        
+        record.qa_pairs.forEach(qaPair => {
+            const qaPairDiv = document.createElement('div');
+            qaPairDiv.className = 'qa-pair';
+            qaPairDiv.innerHTML = `
+                <div class="question">${qaPair.question}</div>
+                <div class="answer">${qaPair.answer}</div>
+                <div class="timestamp">${new Date(qaPair.timestamp).toLocaleString()}</div>
+            `;
+            qaPairsDiv.appendChild(qaPairDiv);
         });
 
+        // Append the header and QA pairs to the session div
         sessionDiv.appendChild(headerDiv);
         sessionDiv.appendChild(qaPairsDiv);
+
+        // Toggle the QA pairs when the header is clicked
+        headerDiv.addEventListener('click', () => {
+            qaPairsDiv.style.display = qaPairsDiv.style.display === 'block' ? 'none' : 'block';
+            headerDiv.classList.toggle('active');
+        });
+
+        // Add the session div to the container
         container.appendChild(sessionDiv);
     });
 }

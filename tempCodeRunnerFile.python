@@ -1,0 +1,48 @@
+from pymongo import MongoClient
+
+def create_aggregated_table():
+    # Connect to the MongoDB client
+    client = MongoClient("mongodb+srv://ctbot:hello1234@ctbot.5vx6h.mongodb.net/?retryWrites=true&w=majority&appName=CTBot")  # Replace with your MongoDB URI
+
+    # Specify the database and collection
+    db = client['user-chat']  # Replace with your actual database name
+    chat_records = db['chat-history']  # Existing collection
+
+    # Define the aggregation pipeline
+    pipeline = [
+        {
+            "$unwind": "$qa_pairs"  # Unwind the qa_pairs array to flatten it
+        },
+        {
+            "$group": {
+                "_id": "$user_id",  # Group by user_id
+                "aggregate_risk_score": {"$first": "$aggregate_risk_score"},  # Retrieve the existing aggregate_risk_score
+                "qa_pairs": {"$push": "$qa_pairs"}  # Collect all qa_pairs for each user into a single array
+            }
+        },
+        {
+            "$project": {
+                "user_id": "$_id",  # Include user_id as the field
+                "aggregate_risk_score": 1,  # Include aggregate_risk_score
+                "qa_pairs": 1,  # Include qa_pairs
+                "_id": 0  # Exclude the default _id field
+            }
+        },
+        {
+            "$out": "users"  # Output the result into a new collection called "users"
+        }
+    ]
+
+    try:
+        # Perform the aggregation and store the result into the new collection
+        chat_records.aggregate(pipeline)
+        print("Aggregation complete and new collection created.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        # Close the MongoDB client connection
+        client.close()
+
+# Run the function to create the new table (collection)
+if __name__ == "__main__":
+    create_aggregated_table()

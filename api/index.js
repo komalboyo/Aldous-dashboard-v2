@@ -17,7 +17,7 @@ app.use((req, res, next) => {
 async function connectToDatabase() {
     const client = new MongoClient(process.env.MONGODB_URI);
     await client.connect();
-    return client.db('user-chat').collection('chat-history');
+    return client.db('user-chat').collection('users');
 }
 
 app.get('/api/chat-records', async (req, res) => {
